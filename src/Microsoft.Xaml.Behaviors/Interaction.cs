@@ -66,6 +66,8 @@ namespace Microsoft.Xaml.Behaviors
             {
                 triggerCollection = new TriggerCollection();
                 obj.SetValue(Interaction.TriggersProperty, triggerCollection);
+
+                SetupFrameworkElementEvents(obj as FrameworkElement);
             }
             return triggerCollection;
         }
@@ -82,6 +84,8 @@ namespace Microsoft.Xaml.Behaviors
             {
                 behaviorCollection = new BehaviorCollection();
                 obj.SetValue(Interaction.BehaviorsProperty, behaviorCollection);
+
+                SetupFrameworkElementEvents(obj as FrameworkElement);
             }
             return behaviorCollection;
         }
@@ -144,6 +148,36 @@ namespace Microsoft.Xaml.Behaviors
         internal static bool IsElementLoaded(FrameworkElement element)
         {
             return element.IsLoaded;
+        }
+
+        private static void SetupFrameworkElementEvents(FrameworkElement frameworkElement)
+        {
+            if (frameworkElement == null)
+                return;
+
+            frameworkElement.Loaded -= FrameworkElement_Loaded;
+            frameworkElement.Loaded += FrameworkElement_Loaded;
+
+            frameworkElement.Unloaded -= FrameworkElement_Unloaded;
+            frameworkElement.Unloaded += FrameworkElement_Unloaded;
+        }
+
+        private static void FrameworkElement_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is DependencyObject d)
+            {
+                GetBehaviors(d).Attach(d);
+                GetTriggers(d).Attach(d);
+            }
+        }
+
+        private static void FrameworkElement_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is DependencyObject d)
+            {
+                GetBehaviors(d).Detach();
+                GetTriggers(d).Detach();
+            }
         }
     }
 }
